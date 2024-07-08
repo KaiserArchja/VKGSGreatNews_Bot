@@ -4,53 +4,56 @@ import requests
 from rss_parser import RSSParser
 
 def Send_Message(message, rss_url):
-    msg = message.text.split()
     try:
-        if(len(msg) == 2 and int(msg[1]) <= 50 and rss_url != "https://www.irna.ir/rss"):
-            item_num = int(msg[1])
-        elif(len(msg) == 2 and int(msg[1]) <= 28):
-            item_num = int(msg[1])
-        else:
-            item_num = 3
-    except:
-        bot.send_message(message.chat.id, "You entered unsupported number!")
-        return
-    print(msg)
-    Answer = ""
-    rss = requests.get(rss_url)
-    parsed = RSSParser.parse(rss.content.decode("utf-8"))
-    showing_num_5 = item_num//7
-    for shownum in range(showing_num_5):
+        msg = message.text.split()
+        try:
+            if(len(msg) == 2 and int(msg[1]) <= 50 and rss_url != "https://www.irna.ir/rss"):
+                item_num = int(msg[1])
+            elif(len(msg) == 2 and int(msg[1]) <= 28):
+                item_num = int(msg[1])
+            else:
+                item_num = 3
+        except:
+            bot.send_message(message.chat.id, "You entered unsupported number!")
+            return
+        print(msg)
         Answer = ""
-        for item in range(shownum*7, (shownum+1)*7):
-            title = str(parsed.channel.items[item].title.content).split("\u200c")
+        rss = requests.get(rss_url)
+        parsed = RSSParser.parse(rss.content.decode("utf-8"))
+        showing_num_5 = item_num//7
+        for shownum in range(showing_num_5):
+            Answer = ""
+            for item in range(shownum*7, (shownum+1)*7):
+                title = str(parsed.channel.items[item].title.content).split("\u200c")
+                for i in title:
+                    Answer += i + " "
+                Answer+= "\n"
+                desc = str(parsed.channel.items[item].description.content).split("\u200c")
+                for i in desc:
+                    Answer += i + " "
+                Answer += "\n [Click Here]" + "(" +str(parsed.channel.items[item].content.link.content)+") "
+                Answer+= "\n ------------\n"
+            if Answer == "":
+                pass
+            else:
+                bot.send_message(message.chat.id, Answer , parse_mode="Markdown")
+        Answer = ""
+        for shownum in range(showing_num_5*7, item_num):
+            title = str(parsed.channel.items[shownum].title.content).split("\u200c")
             for i in title:
                 Answer += i + " "
             Answer+= "\n"
-            desc = str(parsed.channel.items[item].description.content).split("\u200c")
+            desc = str(parsed.channel.items[shownum].description.content).split("\u200c")
             for i in desc:
                 Answer += i + " "
-            Answer += "\n [Click Here]" + "(" +str(parsed.channel.items[item].content.link.content)+") "
+            Answer += "\n [Click Here]" + "(" +str(parsed.channel.items[shownum].content.link.content)+") "
             Answer+= "\n ------------\n"
         if Answer == "":
             pass
         else:
-            bot.send_message(message.chat.id, Answer , parse_mode="Markdown")
-    Answer = ""
-    for shownum in range(showing_num_5*7, item_num):
-        title = str(parsed.channel.items[shownum].title.content).split("\u200c")
-        for i in title:
-            Answer += i + " "
-        Answer+= "\n"
-        desc = str(parsed.channel.items[shownum].description.content).split("\u200c")
-        for i in desc:
-            Answer += i + " "
-        Answer += "\n [Click Here]" + "(" +str(parsed.channel.items[shownum].content.link.content)+") "
-        Answer+= "\n ------------\n"
-    if Answer == "":
-        pass
-    else:
-        bot.send_message(message.chat.id, Answer, parse_mode="Markdown")
+            bot.send_message(message.chat.id, Answer, parse_mode="Markdown")
+    except:
+        bot.send_message(message.chat.id, "An Error Occured!")
 
 API = os.getenv("API")
 
@@ -73,7 +76,11 @@ News Agencies: \n
 
 @bot.message_handler(commands=["start", "help", "Start", "Help"])
 def Help(message):
-    bot.send_message(message.chat.id, Greeting_Message)
+    try:
+        bot.send_message(message.chat.id, Greeting_Message)
+    except:
+        bot.send_message(message.chat.id, "An Error Occured!")
+
 
 @bot.message_handler(commands=["Persian_EuroNews", "persian_euronews"])
 def parsi_euronews_latest(message):
